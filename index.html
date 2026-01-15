@@ -1,1 +1,661 @@
 
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tạo mã QR Google Maps — Hướng dẫn & Demo</title>
+  <style>
+    :root{
+      --bg:#0f172a;
+      --card:#0b1120;
+      --accent:#22c55e;
+      --accent-soft:rgba(34,197,94,.12);
+      --accent-text:#bbf7d0;
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+      --border:#1f2937;
+      --error:#fb7185;
+      --radius:18px;
+      --shadow:0 24px 60px rgba(15,23,42,.8);
+    }
+
+    *{box-sizing:border-box;}
+
+    html,body{
+      margin:0;
+      padding:0;
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial;
+      background:radial-gradient(circle at top,#1d2538 0,#020617 55%,#000 100%);
+      color:var(--text);
+      min-height:100vh;
+    }
+
+    .page{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+
+    .shell{
+      width:100%;
+      max-width:1100px;
+      background:linear-gradient(145deg,#020617 0,#020617 40%,#020617 60%,#020617 100%);
+      border-radius:24px;
+      border:1px solid #1f2937;
+      box-shadow:var(--shadow);
+      display:grid;
+      grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);
+      overflow:hidden;
+    }
+
+    @media (max-width:840px){
+      .shell{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .left{
+      padding:26px 26px 20px;
+      border-right:1px solid #111827;
+    }
+    @media (max-width:840px){
+      .left{
+        border-right:none;
+        border-bottom:1px solid #111827;
+      }
+    }
+
+    .right{
+      padding:26px 26px 20px;
+      background:radial-gradient(circle at top,#0b1120 0,#020617 55%,#000 100%);
+      position:relative;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:4px 10px;
+      border-radius:999px;
+      background:rgba(15,118,110,.1);
+      color:#a5f3fc;
+      font-size:11px;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      border:1px solid rgba(45,212,191,.3);
+      margin-bottom:10px;
+    }
+    .badge-dot{
+      width:8px;
+      height:8px;
+      border-radius:999px;
+      background:#22c55e;
+      box-shadow:0 0 0 6px rgba(34,197,94,.18);
+    }
+
+    h1{
+      margin:0 0 6px;
+      font-size:24px;
+      letter-spacing:.01em;
+    }
+    .subtitle{
+      margin:0 0 20px;
+      font-size:13px;
+      color:var(--muted);
+    }
+
+    .steps{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:10px;
+      margin-bottom:22px;
+    }
+    @media (max-width:640px){
+      .steps{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .step{
+      border-radius:14px;
+      padding:10px 10px 9px;
+      background:#020617;
+      border:1px solid #111827;
+      position:relative;
+    }
+    .step-num{
+      font-size:11px;
+      color:#9ca3af;
+      text-transform:uppercase;
+      letter-spacing:.12em;
+      margin-bottom:4px;
+    }
+    .step-title{
+      font-size:13px;
+      margin-bottom:3px;
+    }
+    .step-body{
+      font-size:11px;
+      color:#6b7280;
+      line-height:1.45;
+    }
+
+    .step-accent{
+      border-color:rgba(34,197,94,.35);
+      background:radial-gradient(circle at top,rgba(34,197,94,.18) 0,rgba(15,23,42,1) 50%);
+    }
+    .step-accent .step-title{
+      color:var(--accent-text);
+    }
+
+    .form-card{
+      border-radius:18px;
+      background:var(--card);
+      border:1px solid var(--border);
+      padding:14px 14px 12px;
+    }
+
+    .form-row{
+      margin-bottom:12px;
+    }
+
+    .label{
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:5px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+    .label strong{
+      color:#e5e7eb;
+      font-size:12px;
+    }
+    .hint{
+      font-size:11px;
+      color:#6b7280;
+    }
+
+    input[type="url"],
+    select,
+    textarea{
+      width:100%;
+      padding:8px 10px;
+      border-radius:10px;
+      border:1px solid #1f2937;
+      background:#020617;
+      color:var(--text);
+      font-size:13px;
+      outline:none;
+      transition:border .16s,box-shadow .16s,background .16s;
+    }
+    input[type="url"]:focus,
+    select:focus,
+    textarea:focus{
+      border-color:rgba(34,197,94,.65);
+      box-shadow:0 0 0 1px rgba(34,197,94,.4);
+      background:#020716;
+    }
+    input::placeholder,
+    textarea::placeholder{
+      color:#4b5563;
+    }
+
+    .inline{
+      display:flex;
+      gap:10px;
+    }
+    .inline > *{
+      flex:1;
+    }
+
+    .actions{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-top:12px;
+      gap:8px;
+    }
+
+    .btn-primary{
+      border:none;
+      border-radius:999px;
+      padding:8px 16px;
+      font-size:13px;
+      font-weight:500;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      cursor:pointer;
+      background:linear-gradient(135deg,#22c55e,#4ade80);
+      color:#022c22;
+      box-shadow:0 14px 30px rgba(34,197,94,.35);
+      transition:transform .12s ease,box-shadow .12s ease,filter .12s ease;
+      white-space:nowrap;
+    }
+    .btn-primary span.icon{
+      font-size:15px;
+    }
+    .btn-primary:hover{
+      transform:translateY(-1px);
+      filter:brightness(1.03);
+      box-shadow:0 18px 40px rgba(34,197,94,.45);
+    }
+    .btn-primary:active{
+      transform:translateY(0);
+      box-shadow:0 6px 16px rgba(34,197,94,.32);
+    }
+
+    .secondary-text{
+      font-size:11px;
+      color:#6b7280;
+    }
+    .secondary-text strong{
+      color:var(--accent-text);
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+      border-radius:999px;
+      padding:3px 8px;
+      background:rgba(148,163,184,.14);
+      font-size:11px;
+      color:#9ca3af;
+    }
+
+    .right-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:12px;
+    }
+    .right-title{
+      font-size:13px;
+      font-weight:500;
+    }
+    .right-sub{
+      font-size:11px;
+      color:var(--muted);
+    }
+
+    .qr-box{
+      border-radius:20px;
+      border:1px solid rgba(148,163,184,.35);
+      background:radial-gradient(circle at top,rgba(148,163,184,.12) 0,rgba(15,23,42,1) 55%);
+      padding:16px 14px 12px;
+      text-align:center;
+      min-height:260px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .qr-placeholder{
+      border-radius:18px;
+      border:1px dashed rgba(148,163,184,.45);
+      padding:26px 18px;
+      max-width:220px;
+    }
+    .qr-placeholder-title{
+      font-size:13px;
+      margin-bottom:4px;
+    }
+    .qr-placeholder-body{
+      font-size:11px;
+      color:#9ca3af;
+      line-height:1.5;
+    }
+
+    #qrPreviewWrapper{
+      display:none;
+      flex-direction:column;
+      align-items:center;
+      gap:8px;
+    }
+    #qrPreviewWrapper.active{
+      display:flex;
+    }
+
+    .qr-canvas-wrapper{
+      width:220px;
+      height:220px;
+      border-radius:18px;
+      background:#020617;
+      border:1px solid rgba(148,163,184,.7);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+    }
+    .qr-canvas-wrapper canvas,
+    .qr-canvas-wrapper img{
+      max-width:100%;
+      max-height:100%;
+      image-rendering:pixelated;
+    }
+
+    .qr-meta{
+      font-size:11px;
+      color:#9ca3af;
+    }
+
+    .download-link{
+      margin-top:4px;
+      font-size:12px;
+      text-decoration:none;
+      padding:5px 10px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.7);
+      background:rgba(15,23,42,.9);
+      color:#e5e7eb;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+
+    .chip-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      margin-top:12px;
+      justify-content:center;
+    }
+
+    .chip{
+      font-size:10px;
+      padding:4px 8px;
+      border-radius:999px;
+      background:rgba(15,23,42,.9);
+      border:1px solid rgba(51,65,85,.9);
+      color:#9ca3af;
+    }
+
+    .qr-glow{
+      position:absolute;
+      inset:auto;
+      top:-40px;
+      right:-40px;
+      width:120px;
+      height:120px;
+      background:radial-gradient(circle,rgba(34,197,94,.24) 0,transparent 60%);
+      filter:blur(1px);
+      pointer-events:none;
+    }
+
+    .helper-list{
+      margin-top:14px;
+      padding:9px 10px;
+      border-radius:14px;
+      border:1px dashed rgba(55,65,81,.9);
+      background:rgba(15,23,42,.8);
+    }
+    .helper-title{
+      font-size:11px;
+      color:#9ca3af;
+      margin-bottom:3px;
+    }
+    .helper-item{
+      font-size:11px;
+      color:#6b7280;
+      line-height:1.4;
+    }
+    .helper-item strong{
+      color:#e5e7eb;
+    }
+
+    .error-text{
+      font-size:11px;
+      color:var(--error);
+      margin-top:4px;
+      display:none;
+    }
+    .error-text.show{
+      display:block;
+    }
+
+    .chip-row + .helper-list{
+      margin-top:10px;
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+  <div class="shell">
+    <!-- LEFT -->
+    <div class="left">
+      <div class="badge">
+        <span class="badge-dot"></span>
+        Tạo mã QR Google Maps trong 3 bước
+      </div>
+      <h1>Tạo mã QR vị trí Google Maps</h1>
+      <p class="subtitle">
+        Dùng để in lên thiệp cưới, poster, standee, menu… Khách chỉ cần giơ điện thoại lên quét là tới đúng địa điểm.
+      </p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">Bước 1</div>
+          <div class="step-title">Lấy link từ Google Maps</div>
+          <div class="step-body">
+            Mở Google Maps → tìm địa điểm → bấm <strong>Chia sẻ</strong> → <strong>Sao chép liên kết</strong>.
+          </div>
+        </div>
+        <div class="step step-accent">
+          <div class="step-num">Bước 2</div>
+          <div class="step-title">Dán link & tạo mã QR</div>
+          <div class="step-body">
+            Dán link vào ô bên dưới, chọn kích thước → bấm <strong>Tạo mã QR</strong>. Mã QR sẽ xuất hiện bên phải.
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">Bước 3</div>
+          <div class="step-title">Lưu & kiểm tra</div>
+          <div class="step-body">
+            Tải ảnh QR về máy. Trước khi in, luôn quét thử bằng điện thoại để chắc chắn dẫn đúng vị trí.
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <form id="qrForm" autocomplete="off">
+          <div class="form-row">
+            <div class="label">
+              <strong>Link Google Maps *</strong>
+              <span class="hint">Ví dụ: https://maps.app.goo.gl/...</span>
+            </div>
+            <input
+              type="url"
+              id="mapsUrl"
+              placeholder="Dán liên kết Google Maps vào đây (Share → Copy link)"
+              required
+            />
+            <div id="urlError" class="error-text">Vui lòng dán một liên kết Google Maps hợp lệ.</div>
+          </div>
+
+          <div class="form-row inline">
+            <div>
+              <div class="label">
+                <strong>Kích thước QR</strong>
+                <span class="hint">Mặc định: 500 x 500 px</span>
+              </div>
+              <select id="qrSize">
+                <option value="300">300 x 300 px (nhỏ)</option>
+                <option value="400">400 x 400 px (vừa)</option>
+                <option value="500" selected>500 x 500 px (thường dùng)</option>
+                <option value="800">800 x 800 px (in lớn)</option>
+              </select>
+            </div>
+            <div>
+              <div class="label">
+                <strong>Ghi nhớ</strong>
+              </div>
+              <textarea
+                id="note"
+                rows="2"
+                placeholder="Ví dụ: QR nhà gái - sảnh Ruby, dùng cho thiệp đợt 1..."
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button type="submit" class="btn-primary">
+              <span class="icon">⚡</span>
+              <span>Tạo mã QR</span>
+            </button>
+            <div class="secondary-text">
+              Hoặc dùng: <strong>ME-QR, QRCodeChimp, QR Tiger</strong> nếu cần QR động & thống kê.
+            </div>
+          </div>
+        </form>
+
+        <div class="helper-list">
+          <div class="helper-title">Gợi ý khi in lên thiệp / poster:</div>
+          <div class="helper-item">• Nên dùng kích thước QR từ <strong>2.5 – 3 cm</strong> trở lên trên bản in.</div>
+          <div class="helper-item">• Chừa khoảng trống xung quanh QR, tránh chèn quá sát họa tiết.</div>
+          <div class="helper-item">• In xong nhớ <strong>quét thử từ bản in thật</strong>, không chỉ trên màn hình.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="right">
+      <div class="right-header">
+        <div>
+          <div class="right-title">Xem trước mã QR</div>
+          <div class="right-sub">Mã QR sẽ thay đổi ngay khi bạn bấm “Tạo mã QR”.</div>
+        </div>
+        <div class="pill">
+          <span>Scan thử trước khi in</span>
+        </div>
+      </div>
+
+      <div class="qr-box">
+        <div class="qr-glow"></div>
+
+        <!-- Placeholder -->
+        <div id="qrPlaceholder" class="qr-placeholder">
+          <div class="qr-placeholder-title">Chưa có mã QR</div>
+          <div class="qr-placeholder-body">
+            Dán link Google Maps vào bên trái và bấm <strong>“Tạo mã QR”</strong>.<br>
+            Ảnh mã QR sẽ hiện tại đây, bạn có thể tải về và đưa cho bộ phận thiết kế/in ấn.
+          </div>
+        </div>
+
+        <!-- Khi đã có QR -->
+        <div id="qrPreviewWrapper">
+          <div id="qrCanvasWrapper" class="qr-canvas-wrapper"></div>
+          <div class="qr-meta" id="qrMetaText">
+            Mã QR đã sẵn sàng. Hãy dùng camera điện thoại để quét thử.
+          </div>
+          <a id="downloadLink" class="download-link" href="#" download="qr-google-maps.png">
+            ⬇ Tải mã QR về máy
+          </a>
+        </div>
+
+        <div class="chip-row">
+          <div class="chip">Google Maps</div>
+          <div class="chip">Thiệp cưới / Nhà hàng</div>
+          <div class="chip">Poster / Standee</div>
+          <div class="chip">Check-in địa điểm</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Thư viện tạo QR: QRCode.js (CDN) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script>
+  const form = document.getElementById('qrForm');
+  const urlInput = document.getElementById('mapsUrl');
+  const sizeSelect = document.getElementById('qrSize');
+  const noteInput = document.getElementById('note');
+
+  const placeholder = document.getElementById('qrPlaceholder');
+  const previewWrapper = document.getElementById('qrPreviewWrapper');
+  const qrCanvasWrapper = document.getElementById('qrCanvasWrapper');
+  const qrMetaText = document.getElementById('qrMetaText');
+  const downloadLink = document.getElementById('downloadLink');
+  const urlError = document.getElementById('urlError');
+
+  let qrCodeInstance = null;
+
+  function isLikelyGoogleMapsUrl(url) {
+    return /google\.[a-z.]+\/maps|goo\.gl\/maps|maps\.app\.goo\.gl/.test(url);
+  }
+
+  function updateDownloadLink() {
+    const canvas = qrCanvasWrapper.querySelector('canvas');
+    const img = qrCanvasWrapper.querySelector('img');
+    try {
+      if (canvas && canvas.toDataURL) {
+        const dataUrl = canvas.toDataURL('image/png');
+        downloadLink.href = dataUrl;
+      } else if (img && img.src) {
+        downloadLink.href = img.src;
+      }
+    } catch (e) {
+      // nếu gặp lỗi CORS (hiếm), vẫn để link rỗng – người dùng có thể click chuột phải vào QR để lưu.
+      console.warn(e);
+    }
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    urlError.classList.remove('show');
+
+    const rawUrl = urlInput.value.trim();
+    if (!rawUrl){
+      urlError.textContent = 'Vui lòng dán một liên kết Google Maps.';
+      urlError.classList.add('show');
+      return;
+    }
+
+    // Cảnh báo nếu không giống link Google Maps
+    if (!isLikelyGoogleMapsUrl(rawUrl)) {
+      urlError.textContent = 'Link này có vẻ không phải Google Maps. Vẫn có thể dùng, nhưng bạn nên kiểm tra lại.';
+      urlError.classList.add('show');
+      // vẫn cho tạo QR
+    }
+
+    const size = parseInt(sizeSelect.value, 10) || 500;
+
+    // Xóa QR cũ
+    qrCanvasWrapper.innerHTML = '';
+
+    // Tạo QR mới bằng thư viện QRCode.js
+    qrCodeInstance = new QRCode(qrCanvasWrapper, {
+      text: rawUrl,
+      width: size,
+      height: size,
+      colorDark: "#000000",
+      colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.H
+    });
+
+    // Cập nhật meta
+    const noteText = noteInput.value.trim();
+    if (noteText) {
+      qrMetaText.textContent = `Mã QR cho: “${noteText}”. Hãy quét thử trước khi giao file in.`;
+    } else {
+      qrMetaText.textContent = 'Mã QR Google Maps đã tạo xong. Hãy quét thử trước khi in lên thiệp / poster.';
+    }
+
+    placeholder.style.display = 'none';
+    previewWrapper.classList.add('active');
+
+    // Chờ thư viện vẽ xong rồi lấy data URL cho nút download
+    setTimeout(updateDownloadLink, 100);
+  });
+</script>
+</body>
+</html>
